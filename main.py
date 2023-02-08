@@ -1,5 +1,6 @@
 import pygame
 from tkinter import filedialog
+from tkinter.filedialog import askdirectory
 from tkinter.ttk import *
 from tkinter import *
 import random
@@ -24,18 +25,17 @@ value  = 50
 
 def load_and_play():
     global current_max
-    
+    reset_progressbar()
     selected_song = listbox_songs.get(ACTIVE)
     index_song = listbox_songs.curselection()
-    path = "sounds/" + selected_song
+    path =  selected_song
     pygame.mixer.music.load(path)
     pygame.mixer.music.play()
-    current_max = pygame.mixer.Sound("sounds/" + listbox_songs.get(ACTIVE)).get_length() 
+    current_max = pygame.mixer.Sound(listbox_songs.get(ACTIVE)).get_length() 
     progressbar['maximum'] = current_max
     max_time.set(str(convert(current_max)))
     
 def random_song():
-    current_pos = 0
     global is_random
     if not is_random:
         random_button.config(bg='black', fg='white')
@@ -45,8 +45,6 @@ def random_song():
         listbox_songs.selection_set(index_song, last= index_song)   
         load_and_play()
         is_random = True
-    
-    
     else:
         random_button.config(bg='white', fg='black')
         is_random = False
@@ -79,6 +77,7 @@ def next():
     load_and_play()
 
 def previous():
+
     current_pos = 0
     current_index = listbox_songs.curselection()
     if not current_index:
@@ -105,7 +104,6 @@ def change_volume(value):
     pygame.mixer.music.set_volume(int(value)/100)
 
 def end():
-
     if is_repeat:
         load_and_play()
     elif is_random:
@@ -113,7 +111,6 @@ def end():
     else:
         next()
  
-
 def update():
     global current_pos, current_max
     if not is_paused and pygame.mixer.music.get_busy():
@@ -138,33 +135,48 @@ def convert(seconds):
 def on_progressbar_click(event):
     global current_pos
     new_pos = int(((event.x / progressbar.winfo_width()) * progressbar["maximum"]))
-    print(new_pos)
     current_pos = new_pos
     pygame.mixer.music.rewind()
     pygame.mixer.music.set_pos(new_pos)
     progressbar.config(value=new_pos)
 
 def add_file():
-    destination = "/Users/eliea/OneDrive/Documents/Plateforme/Unit 2/Python/Project Pool/playerMusic/sounds/"
+    destination = filedialog.askdirectory(
+        title= "Selectionnez l'endroit ou vous voulez copiez les fichiers"
+        
+    )   
     src_files = filedialog.askopenfilenames(
         title="Sélectionnez les fichiers à copier",
         filetypes=(("Tous les fichiers", "*.*"),),
         initialdir=os.path.expanduser("~/Desktop")
     )
     for src_file in src_files:
-        
         shutil.copy2(src_file, destination)
 
+    listbox_songs.delete(0, END)
 
+    for fichier in os.listdir():
+        listbox_songs.insert(END, fichier)
+
+def stop():
+    pygame.mixer.music.stop()
+    reset_progressbar()
+
+
+def reset_progressbar():
+    global current_pos
+    progressbar.config(value= 0)
+    current_pos = 0
+    current_time.set(str(convert(0)))
+    max_time.set(str(convert(0)))
 
 # UI ----------------------
 
+os.chdir(askdirectory())
 
-
-dossier = "sounds"
 listbox_songs = Listbox(window, bg="grey", width=47)
 listbox_songs.place(x=8, y=10)
-for fichier in os.listdir(dossier):
+for fichier in os.listdir():
     listbox_songs.insert(END, fichier)
 
 current_time_aff = Label(window,width=5, textvariable=current_time)
@@ -178,8 +190,12 @@ progressbar.place(x=40, y=200)
 progressbar.bind("<Button-1>", on_progressbar_click)
 
 
+
 play_button = Button(window, text = 'Play', bg="white", fg="black", command = load_and_play)
-play_button.place(x= 134, y=240)
+play_button.place(x= 117, y=240)
+
+stop_button = Button(window, text= 'Stop', bg= "white", fg="black", command = stop)
+stop_button.place(x= 155, y= 240)
 
 random_button = Button(window, text="Random Song", bg="white", fg="black", command = random_song)
 random_button.place(x=110, y=275)
