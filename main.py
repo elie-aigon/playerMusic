@@ -62,7 +62,7 @@ def pause():
         is_paused = False
 
 def next():
-    current_pos = 0
+    reset_progressbar()
     current_index = listbox_songs.curselection()
     if not current_index:
         next_index = 0
@@ -78,7 +78,7 @@ def next():
 
 def previous():
 
-    current_pos = 0
+    reset_progressbar()
     current_index = listbox_songs.curselection()
     if not current_index:
         prev_index = 0
